@@ -23,6 +23,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -49,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private List<Resturant> resturants;
     private Handler handler;
     private TextView resturantName;
+    private TextView restAddress;
     private run DOWNLOAD;
     private boolean goButtonEnabled;
     private Resturant currectResturant;
@@ -96,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
         goButton = (Button) findViewById(R.id.goButton);
         resturantName = (TextView) findViewById(R.id.resturantName);
         directions = (Button) findViewById(R.id.directions);
+        restAddress = (TextView) findViewById(R.id.resturantAddress);
 
 
         //Setup UI
@@ -103,6 +106,8 @@ public class MainActivity extends AppCompatActivity {
         goButtonEnabled = true;
         goButton.setFocusableInTouchMode(true);
         goButton.setFocusable(true);
+        restAddress.setText("");
+        setTitle("What To Eat");
 
 
 
@@ -112,6 +117,11 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
 
                 checkGPSPermission();
+
+                if(goButtonEnabled == false)
+                {
+                    Toast.makeText(getApplicationContext(), "Please don't spam search.", Toast.LENGTH_SHORT).show();
+                }
 
                 //Check GPS Cord
                 if(Double.toString(longitude).equals("0.0") && Double.toString(latitude).equals("0.0") )
@@ -129,16 +139,10 @@ public class MainActivity extends AppCompatActivity {
 
                 //Set loading message
                 resturantName.setText("Looking...");
+                restAddress.setText("");
 
                 //Make sure within timeout to prevent spamming
-                if(goButtonEnabled)
-                {
-                    new run(LONGITUDE, LATITUDE).execute();
-                }
-                else
-                {
-                    Toast.makeText(getApplicationContext(), "Please don't spam search.", Toast.LENGTH_SHORT).show();
-                }
+                new run(LONGITUDE, LATITUDE).execute();
 
             }
         });
@@ -149,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
 
                 //Make sure a resturant is set or not empty
-                if(currectResturant == null || currectResturant.getAddress().isEmpty())
+                if(currectResturant == null && currectResturant.getAddress().isEmpty())
                 {
                     Toast.makeText(getApplicationContext(), "Search for a restaurant first", Toast.LENGTH_SHORT).show();
                     return;
@@ -274,19 +278,32 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     while(downloadData.getmDownloadStatus() != DownloadStatus.OK)
                     {
+                        try
+                        {
+                            float deg = goButton.getRotation() + 180F;
+                            goButton.animate().rotation(deg).setInterpolator(new AccelerateDecelerateInterpolator());
+                        }
+                        catch(Exception ex)
+                        {
+
+                        }
+
                         try {
-                            Thread.sleep(1000);
+                            Thread.sleep(500);
                         } catch (InterruptedException e) {
 
                         }
+
                     }
+
+                    goButton.animate().rotation(0).setInterpolator(new AccelerateDecelerateInterpolator());
 
                     mainupdateUI();
 
                     goButtonEnabled = false;
 
                     try {
-                        Thread.sleep(7000);
+                        Thread.sleep(5000);
                     } catch (InterruptedException e) {
 
                     }
@@ -322,7 +339,9 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
 
-                int randomNum = 0 + (int)(Math.random() * count);
+                Random rand = new Random(System.currentTimeMillis());
+                int randomNum = rand.nextInt(count) + 0;
+
 
                 Log.d("RANDOMNUMBER", Integer.toString(randomNum));
 
@@ -331,8 +350,7 @@ public class MainActivity extends AppCompatActivity {
 
                 //Update UI elements
                 resturantName.setText(currectResturant.getName());
-
-
+                restAddress.setText(currectResturant.getAddress());
 
             }
         });

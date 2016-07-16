@@ -1,0 +1,104 @@
+{
+  "project_info": {
+    "project_number": "188571596844",
+    "firebase_url": "https://default-faa94.firebaseio.com",
+    "project_id": "default-faa94",
+    "storage_bucket": "default-faa94.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:188571596844:android:c600cc3ea091acf8",
+        "android_client_info": {
+          "package_name": "com.martinojones.temperatureconverter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "188571596844-7cjcemjbte9gmpqei936fg9rnbq9bau6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0KNz8eB0L4DOSUJfoSPuBijLfwOFPDH8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:188571596844:android:f89f00ada7437c03",
+        "android_client_info": {
+          "package_name": "com.martinojones.vulnerabilityfeed"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "188571596844-7cjcemjbte9gmpqei936fg9rnbq9bau6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0KNz8eB0L4DOSUJfoSPuBijLfwOFPDH8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:188571596844:android:12134c5efe930010",
+        "android_client_info": {
+          "package_name": "com.martinojones.whattoeat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "188571596844-7cjcemjbte9gmpqei936fg9rnbq9bau6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0KNz8eB0L4DOSUJfoSPuBijLfwOFPDH8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
