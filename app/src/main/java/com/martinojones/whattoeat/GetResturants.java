@@ -21,16 +21,18 @@ public class GetResturants extends GetRawData {
     private boolean done = false;
     private String LONG;
     private String LAT;
+    private String distance;
 
 
-    public GetResturants(String longitude, String lattitude) {
+    public GetResturants(String longitude, String lattitude, String dist) {
         super(null);
 
         this.LONG = longitude;
         this.LAT = lattitude;
+        this.distance = dist;
 
 
-        String CVEDETAILS_URL = "https://api.locu.com/v1_0/venue/search/?location=" + LAT +"%2C" + LONG + "&category=restaurant&radius=16093&api_key=ab75f73e558edaf6773aea262208a9dac36a6196";
+        String CVEDETAILS_URL = "https://api.locu.com/v1_0/venue/search/?location=" + LAT +"%2C" + LONG + "&category=restaurant&radius=" + distance +"&api_key=ab75f73e558edaf6773aea262208a9dac36a6196";
         mDestinationUri = Uri.parse(CVEDETAILS_URL);
 
         resturants = new ArrayList<>();

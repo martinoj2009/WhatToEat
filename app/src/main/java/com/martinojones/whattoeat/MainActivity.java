@@ -27,6 +27,7 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.RadioButton;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,13 +45,19 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
+    //UI Elements
     private Button goButton;
     private Button directions;
+    private TextView resturantName;
+    private TextView restAddress;
+    private RadioButton radioShort;
+    private RadioButton radioMedium;
+    private  RadioButton radioLong;
+
     private GetResturants downloadData;
     private List<Resturant> resturants;
     private Handler handler;
-    private TextView resturantName;
-    private TextView restAddress;
+
     private run DOWNLOAD;
     private boolean goButtonEnabled;
     private Resturant currectResturant;
@@ -69,12 +76,14 @@ public class MainActivity extends AppCompatActivity {
     Location location; // location
     double latitude; // latitude
     double longitude; // longitude
+    String distance;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
         //Setup GPS
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -99,6 +108,9 @@ public class MainActivity extends AppCompatActivity {
         resturantName = (TextView) findViewById(R.id.resturantName);
         directions = (Button) findViewById(R.id.directions);
         restAddress = (TextView) findViewById(R.id.resturantAddress);
+        radioShort = (RadioButton) findViewById(R.id.distanceShort);
+        radioMedium = (RadioButton) findViewById(R.id.distanceMedium);
+        radioLong = (RadioButton) findViewById(R.id.distanceLong);
 
 
         //Setup UI
@@ -106,7 +118,9 @@ public class MainActivity extends AppCompatActivity {
         goButtonEnabled = true;
         goButton.setFocusableInTouchMode(true);
         goButton.setFocusable(true);
+        radioMedium.setChecked(true);
         restAddress.setText("");
+
         setTitle("What To Eat");
 
 
@@ -134,6 +148,20 @@ public class MainActivity extends AppCompatActivity {
                 LONGITUDE = Double.toString(longitude);
                 LATITUDE = Double.toString(latitude);
 
+                //Set the search distance by the radio button
+                if(radioShort.isChecked())
+                {
+                    distance = "1609";
+                }
+                else if(radioMedium.isChecked())
+                {
+                    distance = "24140";
+                }
+                else
+                {
+                    distance = "32186";
+                }
+
                 //Reset focus
                 goButton.requestFocus();
 
@@ -142,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
                 restAddress.setText("");
 
                 //Make sure within timeout to prevent spamming
-                new run(LONGITUDE, LATITUDE).execute();
+                new run(LONGITUDE, LATITUDE, distance).execute();
 
             }
         });
@@ -174,6 +202,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+
+        checkGPS();
+
         //Setup GPS
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
@@ -185,7 +216,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-
         //GPS
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationListener = new myLocationlistener();
@@ -193,7 +223,34 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    //This will update the UI if there's no GPS signal
+    private void checkGPS()
+    {
+        Runnable check = new Runnable() {
+            @Override
+            public void run() {
+                while(true)
+                {
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
 
+                    //Run the runnable using handler
+                    updateUI();
+
+                }
+
+            }
+        };
+
+        new Thread(check).start();
+    }
+
+
+
+    //Used to get GPS location
     private class myLocationlistener implements LocationListener {
         @Override
         public void onLocationChanged(Location location) {
@@ -227,11 +284,13 @@ public class MainActivity extends AppCompatActivity {
     {
         private String LONG;
         private String LATT;
+        private String distance;
 
-        run(String longitude, String latitude)
+        run(String longitude, String latitude, String dist)
         {
             this.LONG = longitude;
             this.LATT = latitude;
+            this.distance = dist;
         }
 
         @Override
@@ -257,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
             try
             {
                 downloadData = null;
-                downloadData = new GetResturants(LONG, LATT);
+                downloadData = new GetResturants(LONG, LATT, distance);
                 downloadData.execute();
             }
             catch(Exception ex)
@@ -359,6 +418,21 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void updateUI()
+    {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if(latitude == 0.0 || longitude == 0.0)
+                {
+                    goButton.setText("NO GPS");
+                    Log.d("LOCATION", "NO GPS");
+                }
+
+            }
+        });
+    }
+
     public static void hideSoftKeyboard(Activity activity) {
         InputMethodManager inputMethodManager = (InputMethodManager)  activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
         inputMethodManager.hideSoftInputFromWindow(activity.getCurrentFocus().getWindowToken(), 0);
@@ -383,6 +457,8 @@ public class MainActivity extends AppCompatActivity {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);
         }
     }
+
+
 
 
 }

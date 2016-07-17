@@ -45,9 +45,39 @@
         android:layout_marginTop="43dp"
         android:id="@+id/resturantAddress" />
 
+    #Distance radio buttons
+    <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_centerHorizontal="true">
+    <RadioButton
+        android:text="1 mile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/directions"
+        android:layout_alignParentStart="true"
+        android:id="@+id/distanceShort" />
 
+    <RadioButton
+        android:text="15 miles"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/distanceShort"
+        android:layout_alignStart="@+id/goButton"
+        android:id="@+id/distanceMedium" />
 
+    <RadioButton
+        android:text="20 miles"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/distanceMedium"
+        android:layout_alignParentEnd="true"
+        android:id="@+id/distanceLong" />
+    </RadioGroup>
 
 
 
 </RelativeLayout>
+
+
