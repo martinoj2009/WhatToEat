@@ -201,6 +201,8 @@ public class MainActivity extends AppCompatActivity {
                 latitude = location.getLatitude();
                 longitude = location.getLongitude();
             }
+
+            //Log.d("LOCATION", "Locations is: LAT: " + latitude + " LONG: " + longitude);
         }
 
         @Override

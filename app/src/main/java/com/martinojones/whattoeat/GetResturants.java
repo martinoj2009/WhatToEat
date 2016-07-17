@@ -30,7 +30,7 @@ public class GetResturants extends GetRawData {
         this.LAT = lattitude;
 
 
-        String CVEDETAILS_URL = "https://api.locu.com/v1_0/venue/search/?location=" + LAT +"%2C" + LONG + "&category=restaurant&api_key=ab75f73e558edaf6773aea262208a9dac36a6196";
+        String CVEDETAILS_URL = "https://api.locu.com/v1_0/venue/search/?location=" + LAT +"%2C" + LONG + "&category=restaurant&radius=16093&api_key=ab75f73e558edaf6773aea262208a9dac36a6196";
         mDestinationUri = Uri.parse(CVEDETAILS_URL);
 
         resturants = new ArrayList<>();
