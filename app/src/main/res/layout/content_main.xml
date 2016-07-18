@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.martinojones.whattoeat.MainActivity"
+    tools:showIn="@layout/activity_main">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:background="#5C6BC0"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        tools:context="com.martinojones.whattoeat.MainActivity">
+
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Directions"
+            android:id="@+id/directions"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true" />
+
+
+
+        <SeekBar
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/seekBar"
+            android:max="50"
+            android:layout_above="@+id/directions"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="53dp" />
+
+        <TextView
+            android:text="DISTANCE"
+            android:textColor="#FFFF"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_above="@+id/seekBar"
+            android:id="@+id/distanceValue" />
+
+
+        <android.support.design.widget.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            app:fabSize="normal"
+            app:backgroundTint="#F44336"
+            app:srcCompat="@android:drawable/ic_menu_share"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:id="@+id/shareButton" />
+
+
+        <Button
+            android:layout_width="90dp"
+            android:layout_height="90dp"
+            android:text=""
+            android:id="@+id/goButton"
+            android:textColor="#FFFF"
+            android:background="@drawable/appicon"
+            android:layout_centerVertical="true"
+            android:layout_alignEnd="@+id/directions" />
+
+
+    </RelativeLayout>
+
+
+</android.support.constraint.ConstraintLayout>

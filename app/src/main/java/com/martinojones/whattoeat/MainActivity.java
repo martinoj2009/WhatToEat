@@ -2,8 +2,6 @@ package com.martinojones.whattoeat;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -15,31 +13,23 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
-import android.text.InputFilter;
-import android.text.TextWatcher;
+import android.text.method.KeyListener;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.RadioButton;
-import android.widget.RatingBar;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
@@ -50,9 +40,9 @@ public class MainActivity extends AppCompatActivity {
     private Button directions;
     private TextView resturantName;
     private TextView restAddress;
-    private RadioButton radioShort;
-    private RadioButton radioMedium;
-    private  RadioButton radioLong;
+    private SeekBar distanceBar;
+    private TextView distanceValue;
+    private FloatingActionButton shareButton;
 
     private GetResturants downloadData;
     private List<Resturant> resturants;
@@ -99,18 +89,20 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
         //Setup handler
         handler = new Handler();
+
+        //This is for the GPS error message
+        checkGPS();
 
         //Assign UI elements
         goButton = (Button) findViewById(R.id.goButton);
         resturantName = (TextView) findViewById(R.id.resturantName);
         directions = (Button) findViewById(R.id.directions);
         restAddress = (TextView) findViewById(R.id.resturantAddress);
-        radioShort = (RadioButton) findViewById(R.id.distanceShort);
-        radioMedium = (RadioButton) findViewById(R.id.distanceMedium);
-        radioLong = (RadioButton) findViewById(R.id.distanceLong);
+        distanceBar = (SeekBar) findViewById(R.id.seekBar);
+        distanceValue = (TextView) findViewById(R.id.distanceValue);
+        shareButton = (FloatingActionButton) findViewById(R.id.shareButton);
 
 
         //Setup UI
@@ -118,10 +110,11 @@ public class MainActivity extends AppCompatActivity {
         goButtonEnabled = true;
         goButton.setFocusableInTouchMode(true);
         goButton.setFocusable(true);
-        radioMedium.setChecked(true);
+        distanceBar.setProgress(settings.getInt("DISTANCE", 10));
+        updateDistance(settings.getInt("DISTANCE", 10));
         restAddress.setText("");
 
-        setTitle("What To Eat");
+        //setTitle("What To Eat");
 
 
 
@@ -135,12 +128,15 @@ public class MainActivity extends AppCompatActivity {
                 if(goButtonEnabled == false)
                 {
                     Toast.makeText(getApplicationContext(), "Please don't spam search.", Toast.LENGTH_SHORT).show();
+                    return;
                 }
+
+                goButtonEnabled = false;
 
                 //Check GPS Cord
                 if(Double.toString(longitude).equals("0.0") && Double.toString(latitude).equals("0.0") )
                 {
-                    Toast.makeText(getApplicationContext(), "No GPS location yet, try again.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "No GPS, try again.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -148,19 +144,6 @@ public class MainActivity extends AppCompatActivity {
                 LONGITUDE = Double.toString(longitude);
                 LATITUDE = Double.toString(latitude);
 
-                //Set the search distance by the radio button
-                if(radioShort.isChecked())
-                {
-                    distance = "1609";
-                }
-                else if(radioMedium.isChecked())
-                {
-                    distance = "24140";
-                }
-                else
-                {
-                    distance = "32186";
-                }
 
                 //Reset focus
                 goButton.requestFocus();
@@ -169,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
                 resturantName.setText("Looking...");
                 restAddress.setText("");
 
-                //Make sure within timeout to prevent spamming
+
                 new run(LONGITUDE, LATITUDE, distance).execute();
 
             }
@@ -181,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
 
                 //Make sure a resturant is set or not empty
-                if(currectResturant == null && currectResturant.getAddress().isEmpty())
+                if(currectResturant == null || currectResturant.getAddress().isEmpty())
                 {
                     Toast.makeText(getApplicationContext(), "Search for a restaurant first", Toast.LENGTH_SHORT).show();
                     return;
@@ -201,9 +184,53 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        distanceBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int progressChanged = 0;
+
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
+
+                //1 is the lowest distance
+                if(progress < 1)
+                {
+                    progress = 1;
+                }
+
+                progressChanged = progress;
+            }
+
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // TODO Auto-generated method stub
+            }
+
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                editor.putInt("DISTANCE", progressChanged);
+                editor.commit();
+                updateDistance(progressChanged);
+            }
+        });
+
+        shareButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(currectResturant != null)
+                {
+                    String sendMessage = currectResturant.getName() + "\n" + currectResturant.getAddress();
+                    Intent sendIntent = new Intent();
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, sendMessage);
+                    sendIntent.setType("text/plain");
+                    startActivity(Intent.createChooser(sendIntent, getResources().getText(R.string.app_name)));
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(), "Search for a restaurant first", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
+        });
 
 
-        checkGPS();
+
 
         //Setup GPS
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -223,6 +250,20 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    //RUn this method to update the distance value and seekbar text
+    private void updateDistance(int distanceChange)
+    {
+        distance = Integer.toString((int) (distanceChange * 1609.344));
+
+
+        distanceValue.setText(distanceChange + " Miles");
+
+
+
+        Log.d("DISTANCE", "Meters: " + distance);
+        Log.d("DISTANCE", "Miles: " + distanceChange);
+    }
+
     //This will update the UI if there's no GPS signal
     private void checkGPS()
     {
@@ -231,14 +272,14 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 while(true)
                 {
+                    //Run the runnable using handler
+                    updateUI();
+
                     try {
                         Thread.sleep(2000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-
-                    //Run the runnable using handler
-                    updateUI();
 
                 }
 
@@ -257,6 +298,11 @@ public class MainActivity extends AppCompatActivity {
             if(location != null){
                 latitude = location.getLatitude();
                 longitude = location.getLongitude();
+            }
+            else
+            {
+                latitude = 0.0;
+                longitude = 0.0;
             }
 
             //Log.d("LOCATION", "Locations is: LAT: " + latitude + " LONG: " + longitude);
@@ -285,11 +331,18 @@ public class MainActivity extends AppCompatActivity {
         private String LONG;
         private String LATT;
         private String distance;
+        private String ZIPCODE;
 
         run(String longitude, String latitude, String dist)
         {
             this.LONG = longitude;
             this.LATT = latitude;
+            this.distance = dist;
+        }
+
+        run(String zipcode, String dist)
+        {
+            this.ZIPCODE = zipcode;
             this.distance = dist;
         }
 
@@ -357,19 +410,15 @@ public class MainActivity extends AppCompatActivity {
 
                     }
 
-                    goButton.animate().rotation(0).setInterpolator(new AccelerateDecelerateInterpolator());
+
 
                     mainupdateUI();
 
-                    goButtonEnabled = false;
-
                     try {
-                        Thread.sleep(5000);
+                        Thread.sleep(3000);
                     } catch (InterruptedException e) {
 
                     }
-
-                    goButtonEnabled = true;
 
 
                     //lockButton();
@@ -412,6 +461,8 @@ public class MainActivity extends AppCompatActivity {
                 //Update UI elements
                 resturantName.setText(currectResturant.getName());
                 restAddress.setText(currectResturant.getAddress());
+                goButton.animate().rotation(0).setInterpolator(new AccelerateDecelerateInterpolator());
+                goButtonEnabled = true;
 
             }
         });
@@ -420,17 +471,29 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateUI()
     {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if(latitude == 0.0 || longitude == 0.0)
-                {
-                    goButton.setText("NO GPS");
-                    Log.d("LOCATION", "NO GPS");
-                }
+        try
+        {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if(latitude == 0.0 || longitude == 0.0)
+                    {
+                        goButton.setText("NO GPS");
+                        Log.d("LOCATION", "NO GPS");
+                    }
+                    else
+                    {
+                        goButton.setText("");
+                    }
 
-            }
-        });
+                }
+            });
+        }
+        catch(NullPointerException ex)
+        {
+
+        }
+
     }
 
     public static void hideSoftKeyboard(Activity activity) {

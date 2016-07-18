@@ -1,83 +1,52 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
+    android:fitsSystemWindows="true"
     tools:context="com.martinojones.whattoeat.MainActivity">
 
-    <Button
-        android:layout_width="90dp"
-        android:layout_height="90dp"
-        android:text=""
-        android:id="@+id/goButton"
-        android:background="@drawable/appicon"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
-
-    <TextView
-        android:layout_width="wrap_content"
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="RESTURANT"
-        android:id="@+id/resturantName"
-        android:layout_marginTop="52dp"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
+        android:theme="@style/AppTheme.AppBarOverlay">
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Directions"
-        android:id="@+id/directions"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/AppTheme.PopupOverlay" />
 
-    <TextView
-        android:text="ADDRESS"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/resturantName"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="43dp"
-        android:id="@+id/resturantAddress" />
 
-    #Distance radio buttons
-    <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_centerHorizontal="true">
-    <RadioButton
-        android:text="1 mile"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/directions"
-        android:layout_alignParentStart="true"
-        android:id="@+id/distanceShort" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="RESTURANT"
+            android:gravity="center"
+            android:textColor="#FFFF"
+            android:textSize="32sp"
+            android:id="@+id/resturantName" />
 
-    <RadioButton
-        android:text="15 miles"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/distanceShort"
-        android:layout_alignStart="@+id/goButton"
-        android:id="@+id/distanceMedium" />
-
-    <RadioButton
-        android:text="20 miles"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/distanceMedium"
-        android:layout_alignParentEnd="true"
-        android:id="@+id/distanceLong" />
-    </RadioGroup>
+        <TextView
+            android:text="ADDRESS"
+            android:textColor="#FFFF"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/resturantName"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="43dp"
+            android:id="@+id/resturantAddress" />
 
 
 
-</RelativeLayout>
+    </android.support.design.widget.AppBarLayout>
+
+    <include layout="@layout/content_main" />
 
 
+
+</android.support.design.widget.CoordinatorLayout>

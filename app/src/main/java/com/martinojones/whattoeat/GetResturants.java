@@ -24,6 +24,7 @@ public class GetResturants extends GetRawData {
     private String distance;
 
 
+    //Has GPS location
     public GetResturants(String longitude, String lattitude, String dist) {
         super(null);
 
@@ -37,6 +38,7 @@ public class GetResturants extends GetRawData {
 
         resturants = new ArrayList<>();
     }
+
 
     public void execute() {
 
