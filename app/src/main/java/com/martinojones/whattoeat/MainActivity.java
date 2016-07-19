@@ -446,6 +446,7 @@ public class MainActivity extends AppCompatActivity {
                 {
                     Toast.makeText(getApplicationContext(), "None Found!", Toast.LENGTH_SHORT).show();
                     resturantName.setText("PRESS SEARCH");
+                    goButtonEnabled = true;
                     return;
                 }
 
