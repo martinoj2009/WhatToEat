@@ -1,6 +1,7 @@
 package com.martinojones.whattoeat;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -13,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -70,149 +72,173 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         final SharedPreferences.Editor editor = settings.edit();
 
+        //Ask for feedback
+        int feedback = settings.getInt("FEEDBACK", 0);
+
+        //If feedback is 0 then prompt
+        if (feedback == 0) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+            builder.setTitle("Beta Feedback");
+            builder.setMessage("Can you provide feedback?");
+
+            builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+
+                public void onClick(DialogInterface dialog, int which) {
+                    // Do nothing but close the dialog
+
+                    String url = "https://drive.google.com/open?id=1Yp4Ai8NKOT-bFeRrzX4ClvCPCk_fKCM3L5vVwOCws2w";
+                    Intent i = new Intent(Intent.ACTION_VIEW);
+                    i.setData(Uri.parse(url));
+                    startActivity(i);
+
+                    dialog.dismiss();
+                }
+            });
+
+            builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    //They said no
+                    dialog.dismiss();
+                }
+            });
+
+            builder.show();
 
 
-        //Setup handler
-        handler = new Handler();
+            //Setup handler
+            handler = new Handler();
 
-        //This is for the GPS error message
-        checkGPS();
+            //This is for the GPS error message
+            checkGPS();
 
-        //Assign UI elements
-        goButton = (Button) findViewById(R.id.goButton);
-        resturantName = (TextView) findViewById(R.id.resturantName);
-        directions = (Button) findViewById(R.id.directions);
-        restAddress = (TextView) findViewById(R.id.resturantAddress);
-        distanceBar = (SeekBar) findViewById(R.id.seekBar);
-        distanceValue = (TextView) findViewById(R.id.distanceValue);
-        shareButton = (FloatingActionButton) findViewById(R.id.shareButton);
-
-
-        //Setup UI
-        resturantName.setText("PRESS SEARCH");
-        goButtonEnabled = true;
-        goButton.setFocusableInTouchMode(true);
-        goButton.setFocusable(true);
-        distanceBar.setProgress(settings.getInt("DISTANCE", 10));
-        updateDistance(settings.getInt("DISTANCE", 10));
-        restAddress.setText("");
+            //Assign UI elements
+            goButton = (Button) findViewById(R.id.goButton);
+            resturantName = (TextView) findViewById(R.id.resturantName);
+            directions = (Button) findViewById(R.id.directions);
+            restAddress = (TextView) findViewById(R.id.resturantAddress);
+            distanceBar = (SeekBar) findViewById(R.id.seekBar);
+            distanceValue = (TextView) findViewById(R.id.distanceValue);
+            shareButton = (FloatingActionButton) findViewById(R.id.shareButton);
 
 
+            //Setup UI
+            resturantName.setText("PRESS SEARCH");
+            goButtonEnabled = true;
+            goButton.setFocusableInTouchMode(true);
+            goButton.setFocusable(true);
+            distanceBar.setProgress(settings.getInt("DISTANCE", 10));
+            updateDistance(settings.getInt("DISTANCE", 10));
+            restAddress.setText("");
 
-        //Assign action listners
-        goButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
 
-                checkGPSPermission();
+            //Assign action listners
+            goButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
 
-                if(goButtonEnabled == false)
-                {
-                    Toast.makeText(getApplicationContext(), "Please don't spam search.", Toast.LENGTH_SHORT).show();
-                    return;
+                    checkGPSPermission();
+
+                    if (goButtonEnabled == false) {
+                        Toast.makeText(getApplicationContext(), "Please don't spam search.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    goButtonEnabled = false;
+
+                    //Check GPS Cord
+                    if (Double.toString(longitude).equals("0.0") && Double.toString(latitude).equals("0.0")) {
+                        Toast.makeText(getApplicationContext(), "No GPS, try again.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    //Assign GPS
+                    LONGITUDE = Double.toString(longitude);
+                    LATITUDE = Double.toString(latitude);
+
+
+                    //Reset focus
+                    goButton.requestFocus();
+
+                    //Set loading message
+                    resturantName.setText("Looking...");
+                    restAddress.setText("");
+
+
+                    new run(LONGITUDE, LATITUDE, distance).execute();
+
+                }
+            });
+
+
+            directions.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+                    //Make sure a resturant is set or not empty
+                    if (currectResturant == null || currectResturant.getAddress().isEmpty()) {
+                        Toast.makeText(getApplicationContext(), "Search for a restaurant first", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    Uri gmmIntentUri = Uri.parse("geo:0,0?q=" + currectResturant.getAddress() + " " + currectResturant.getPostalcode());
+
+                    Log.d("SEARCHADDRESS", "geo:0,0?q=" + currectResturant.getAddress() + currectResturant.getPostalcode());
+
+                    Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+
+                    mapIntent.setPackage("com.google.android.apps.maps");
+
+                    // Attempt to start an activity that can handle the Intent
+                    startActivity(mapIntent);
+
+                }
+            });
+
+            distanceBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                int progressChanged = 0;
+
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+                    //1 is the lowest distance
+                    if (progress < 1) {
+                        progress = 1;
+                    }
+
+                    progressChanged = progress;
                 }
 
-                goButtonEnabled = false;
-
-                //Check GPS Cord
-                if(Double.toString(longitude).equals("0.0") && Double.toString(latitude).equals("0.0") )
-                {
-                    Toast.makeText(getApplicationContext(), "No GPS, try again.", Toast.LENGTH_SHORT).show();
-                    return;
+                public void onStartTrackingTouch(SeekBar seekBar) {
+                    // TODO Auto-generated method stub
                 }
 
-                //Assign GPS
-                LONGITUDE = Double.toString(longitude);
-                LATITUDE = Double.toString(latitude);
-
-
-                //Reset focus
-                goButton.requestFocus();
-
-                //Set loading message
-                resturantName.setText("Looking...");
-                restAddress.setText("");
-
-
-                new run(LONGITUDE, LATITUDE, distance).execute();
-
-            }
-        });
-
-
-        directions.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                //Make sure a resturant is set or not empty
-                if(currectResturant == null || currectResturant.getAddress().isEmpty())
-                {
-                    Toast.makeText(getApplicationContext(), "Search for a restaurant first", Toast.LENGTH_SHORT).show();
-                    return;
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                    editor.putInt("DISTANCE", progressChanged);
+                    editor.commit();
+                    updateDistance(progressChanged);
                 }
+            });
 
-                Uri gmmIntentUri = Uri.parse("geo:0,0?q=" + currectResturant.getAddress() + " " + currectResturant.getPostalcode());
-
-                Log.d("SEARCHADDRESS", "geo:0,0?q=" + currectResturant.getAddress() + currectResturant.getPostalcode());
-
-                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
-
-                mapIntent.setPackage("com.google.android.apps.maps");
-
-                // Attempt to start an activity that can handle the Intent
-                startActivity(mapIntent);
-
-            }
-        });
-
-        distanceBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            int progressChanged = 0;
-
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
-
-                //1 is the lowest distance
-                if(progress < 1)
-                {
-                    progress = 1;
+            shareButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (currectResturant != null) {
+                        String sendMessage = currectResturant.getName() + "\n" + currectResturant.getAddress();
+                        Intent sendIntent = new Intent();
+                        sendIntent.setAction(Intent.ACTION_SEND);
+                        sendIntent.putExtra(Intent.EXTRA_TEXT, sendMessage);
+                        sendIntent.setType("text/plain");
+                        startActivity(Intent.createChooser(sendIntent, getResources().getText(R.string.app_name)));
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Search for a restaurant first", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                 }
-
-                progressChanged = progress;
-            }
-
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                // TODO Auto-generated method stub
-            }
-
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                editor.putInt("DISTANCE", progressChanged);
-                editor.commit();
-                updateDistance(progressChanged);
-            }
-        });
-
-        shareButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(currectResturant != null)
-                {
-                    String sendMessage = currectResturant.getName() + "\n" + currectResturant.getAddress();
-                    Intent sendIntent = new Intent();
-                    sendIntent.setAction(Intent.ACTION_SEND);
-                    sendIntent.putExtra(Intent.EXTRA_TEXT, sendMessage);
-                    sendIntent.setType("text/plain");
-                    startActivity(Intent.createChooser(sendIntent, getResources().getText(R.string.app_name)));
-                }
-                else
-                {
-                    Toast.makeText(getApplicationContext(), "Search for a restaurant first", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-            }
-        });
+            });
 
 
-
-        //checkGPSPermission();
+            //checkGPSPermission();
         /*
         //Setup GPS
         if (ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -231,6 +257,7 @@ public class MainActivity extends AppCompatActivity {
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, locationListener);
         */
 
+        }
     }
 
     //RUn this method to update the distance value and seekbar text
