@@ -8,8 +8,8 @@ android {
         applicationId "com.martinojones.whattoeat"
         minSdkVersion 19
         targetSdkVersion 23
-        versionCode 10
-        versionName "1.9"
+        versionCode 13
+        versionName "1.12"
     }
     buildTypes {
         release {

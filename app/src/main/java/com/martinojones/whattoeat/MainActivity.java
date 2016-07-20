@@ -1,7 +1,5 @@
 package com.martinojones.whattoeat;
 
-import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,22 +14,18 @@ import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Editable;
-import android.text.method.KeyListener;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.List;
 import java.util.Random;
+
+import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -51,22 +45,16 @@ public class MainActivity extends AppCompatActivity {
     private run DOWNLOAD;
     private boolean goButtonEnabled;
     private Resturant currectResturant;
-    public static final String PREFS_NAME = "MyPrefsFile";
-    String FILENAME = "WhatToEat";
-    public static String LONGITUDE = "";
-    public static String LATITUDE = "";
+    private static final String PREFS_NAME = "MyPrefsFile";
+    private static String LONGITUDE = "";
+    private static String LATITUDE = "";
 
     //GPS
-    // The minimum distance to change Updates in meters
-    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
-    // The minimum time between updates in milliseconds
-    private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 1 minute
     private LocationManager locationManager;
     private LocationListener locationListener;
-    Location location; // location
-    double latitude; // latitude
-    double longitude; // longitude
-    String distance;
+    private double latitude; // latitude
+    private double longitude; // longitude
+    private String distance;
 
 
     @Override
@@ -75,13 +63,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
-        //Setup GPS
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-
-            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            locationListener = new myLocationlistener();
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);
-        }
+        //Check permission for location
+        checkGPSPermission();
 
         // Restore preferences
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
@@ -113,8 +96,6 @@ public class MainActivity extends AppCompatActivity {
         distanceBar.setProgress(settings.getInt("DISTANCE", 10));
         updateDistance(settings.getInt("DISTANCE", 10));
         restAddress.setText("");
-
-        //setTitle("What To Eat");
 
 
 
@@ -231,12 +212,13 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
+        //checkGPSPermission();
+        /*
         //Setup GPS
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    new String[]{ACCESS_FINE_LOCATION},
                     PackageManager.PERMISSION_GRANTED);
 
             return;
@@ -246,7 +228,8 @@ public class MainActivity extends AppCompatActivity {
         //GPS
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationListener = new myLocationlistener();
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, locationListener);
+        */
 
     }
 
@@ -273,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
                 while(true)
                 {
                     //Run the runnable using handler
-                    updateUI();
+                    notifyLocationUI();
 
                     try {
                         Thread.sleep(2000);
@@ -286,6 +269,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+        //Run in background as this is on UI thread
         new Thread(check).start();
     }
 
@@ -325,13 +309,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    //RUN IN BACKGROUND
+    //RUN IN BACKGROUND - DOES ALL THE WORK
     private class run extends AsyncTask<String, Void, String>
     {
         private String LONG;
         private String LATT;
         private String distance;
-        private String ZIPCODE;
 
         run(String longitude, String latitude, String dist)
         {
@@ -340,15 +323,9 @@ public class MainActivity extends AppCompatActivity {
             this.distance = dist;
         }
 
-        run(String zipcode, String dist)
-        {
-            this.ZIPCODE = zipcode;
-            this.distance = dist;
-        }
 
         @Override
         protected void onPreExecute() {
-
             super.onPreExecute();
         }
 
@@ -390,10 +367,13 @@ public class MainActivity extends AppCompatActivity {
             Runnable updateUI = new Runnable() {
                 @Override
                 public void run() {
+
+                    //Wait for the download of the JSON data to finish
                     while(downloadData.getmDownloadStatus() != DownloadStatus.OK)
                     {
                         try
                         {
+                            //Continue roating the go button while downaloding
                             float deg = goButton.getRotation() + 180F;
                             goButton.animate().rotation(deg).setInterpolator(new AccelerateDecelerateInterpolator());
                         }
@@ -402,6 +382,7 @@ public class MainActivity extends AppCompatActivity {
 
                         }
 
+                        //Sleep, adds slight pause during rotating
                         try {
                             Thread.sleep(500);
                         } catch (InterruptedException e) {
@@ -411,8 +392,8 @@ public class MainActivity extends AppCompatActivity {
                     }
 
 
-
-                    mainupdateUI();
+                    //Set the current restaurant and update the UI
+                    setCurrentRestaurant();
 
                     try {
                         Thread.sleep(3000);
@@ -420,18 +401,18 @@ public class MainActivity extends AppCompatActivity {
 
                     }
 
-
-                    //lockButton();
                 }
             };
 
+            //Run the above code in a new thread as this is on the UI thread
             new Thread(updateUI).start();
 
         }
 
     }
 
-    private void mainupdateUI()
+    //This method is for getting the current restaurant and setting it in the UI
+    private void setCurrentRestaurant()
     {
 
         handler.post(new Runnable() {
@@ -441,7 +422,7 @@ public class MainActivity extends AppCompatActivity {
 
                 int count = resturants.size();
 
-                //Check resturant size
+                //Check restaurant size
                 if(count == 0)
                 {
                     Toast.makeText(getApplicationContext(), "None Found!", Toast.LENGTH_SHORT).show();
@@ -450,13 +431,14 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
 
+                //Found restaurant, get random number
                 Random rand = new Random(System.currentTimeMillis());
                 int randomNum = rand.nextInt(count) + 0;
 
 
                 Log.d("RANDOMNUMBER", Integer.toString(randomNum));
 
-                //Set the current resturant
+                //Set the current restaurant
                 currectResturant = resturants.get(randomNum);
 
                 //Update UI elements
@@ -470,7 +452,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void updateUI()
+    //This method is used to update the UI if the app can get the location or not
+    private void notifyLocationUI()
     {
         try
         {
@@ -479,8 +462,8 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     if(latitude == 0.0 || longitude == 0.0)
                     {
-                        goButton.setText("NO GPS");
-                        Log.d("LOCATION", "NO GPS");
+                        goButton.setText("NO LOCATION");
+                        Log.d("LOCATION", "NO LOCATION");
                     }
                     else
                     {
@@ -497,21 +480,13 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public static void hideSoftKeyboard(Activity activity) {
-        InputMethodManager inputMethodManager = (InputMethodManager)  activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
-        inputMethodManager.hideSoftInputFromWindow(activity.getCurrentFocus().getWindowToken(), 0);
-    }
 
-
-
+    //This method is for checking and requesting GPS and network provider location
     private void checkGPSPermission()
     {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    PackageManager.PERMISSION_GRANTED);
-
+            ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION}, PackageManager.PERMISSION_GRANTED);
             return;
         }
         else
@@ -519,10 +494,42 @@ public class MainActivity extends AppCompatActivity {
             locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             locationListener = new myLocationlistener();
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, locationListener);
         }
     }
 
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 0: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    Log.d("PERMISSION", "GRANTED");
+
+                    //Restart app
+                    Intent i = getBaseContext().getPackageManager().
+                            getLaunchIntentForPackage(getBaseContext().getPackageName());
+                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(i);
+
+                }
+                else
+                {
+
+                    Log.d("PERMISSION", "DENIED");
+
+                    //Kill application
+                    android.os.Process.killProcess(android.os.Process.myPid());
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
+    }
 
 
 }
