@@ -1,5 +1,6 @@
 package com.martinojones.whattoeat;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,6 +13,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Browser;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
@@ -39,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar distanceBar;
     private TextView distanceValue;
     private FloatingActionButton shareButton;
+    private Button websiteButton;
 
     private GetResturants downloadData;
     private List<Resturant> resturants;
@@ -85,12 +88,15 @@ public class MainActivity extends AppCompatActivity {
             builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
 
                 public void onClick(DialogInterface dialog, int which) {
-                    // Do nothing but close the dialog
 
+                    //Launch the feedback form
                     String url = "https://drive.google.com/open?id=1Yp4Ai8NKOT-bFeRrzX4ClvCPCk_fKCM3L5vVwOCws2w";
                     Intent i = new Intent(Intent.ACTION_VIEW);
                     i.setData(Uri.parse(url));
                     startActivity(i);
+
+                    editor.putInt("FEEDBACK", 1);
+                    editor.commit();
 
                     dialog.dismiss();
                 }
@@ -121,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
             distanceBar = (SeekBar) findViewById(R.id.seekBar);
             distanceValue = (TextView) findViewById(R.id.distanceValue);
             shareButton = (FloatingActionButton) findViewById(R.id.shareButton);
+            websiteButton = (Button) findViewById(R.id.buttonWebsite);
 
 
             //Setup UI
@@ -130,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
             goButton.setFocusable(true);
             distanceBar.setProgress(settings.getInt("DISTANCE", 10));
             updateDistance(settings.getInt("DISTANCE", 10));
+            websiteButton.setVisibility(View.INVISIBLE);
             restAddress.setText("");
 
 
@@ -220,6 +228,19 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
+            websiteButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+                    //Make sure the website isn't null
+                    if(!(currectResturant.getWebsite() == null))
+                    {
+                        launchWebsite();
+
+                    }
+                }
+            });
+
             shareButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -258,6 +279,15 @@ public class MainActivity extends AppCompatActivity {
         */
 
         }
+    }
+
+    //Launch the website of the rest if they have one
+    private void launchWebsite() {
+        String url = currectResturant.getWebsite();
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        browserIntent.putExtra(Browser.EXTRA_APPLICATION_ID, getPackageName());
+        startActivity(browserIntent);
+
     }
 
     //RUn this method to update the distance value and seekbar text
@@ -472,6 +502,19 @@ public class MainActivity extends AppCompatActivity {
                 resturantName.setText(currectResturant.getName());
                 restAddress.setText(currectResturant.getAddress());
                 goButton.animate().rotation(0).setInterpolator(new AccelerateDecelerateInterpolator());
+
+                //If they have a website then enable the website button
+                if(!(currectResturant.getWebsite() == null))
+                {
+                    websiteButton.setVisibility(View.VISIBLE);
+                    websiteButton.setEnabled(true);
+                }
+                else
+                {
+                    websiteButton.setVisibility(View.INVISIBLE);
+                    websiteButton.setEnabled(false);
+                }
+
                 goButtonEnabled = true;
 
             }

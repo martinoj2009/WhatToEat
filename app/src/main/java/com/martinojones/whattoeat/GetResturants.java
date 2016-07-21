@@ -61,6 +61,7 @@ public class GetResturants extends GetRawData {
         final String ADDRESS = "street_address";
         final String CITY = "locality";
         final String ZIP = "postal_code";
+        final String WEBSITE = "website_url";
 
 
 
@@ -80,13 +81,24 @@ public class GetResturants extends GetRawData {
                 String address = jsonVulnerability.getString(ADDRESS);
                 String city = jsonVulnerability.getString(CITY);
                 String post = jsonVulnerability.getString(ZIP);
+                String web = null;
+
+                try
+                {
+                    web = jsonVulnerability.getString(WEBSITE);
+                }
+                catch(Exception ex)
+                {
+                    //They don't have a website
+                }
+
 
 
 
                 //Make sure address contains a number to help with validation
                 if(address.matches(".*\\d+.*"))
                 {
-                    resturants.add(new Resturant(title, address, city, post));
+                    resturants.add(new Resturant(title, address, city, post, web));
                 }
 
 
