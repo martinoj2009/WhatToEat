@@ -20,10 +20,10 @@
 
 
         <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Directions"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
             android:id="@+id/directions"
+            android:background="@drawable/map"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true" />
 
@@ -68,16 +68,7 @@
             android:textColor="#FFFF"
             android:background="@drawable/appicon"
             android:layout_centerVertical="true"
-            android:layout_alignEnd="@+id/directions" />
-
-        <Button
-            android:text="Website"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/seekBar"
-            android:layout_alignParentStart="true"
-            android:layout_marginStart="17dp"
-            android:id="@+id/buttonWebsite" />
+            android:layout_centerHorizontal="true" />
 
 
     </RelativeLayout>

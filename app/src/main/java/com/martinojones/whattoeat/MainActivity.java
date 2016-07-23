@@ -19,6 +19,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.DragEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.Button;
@@ -35,19 +37,14 @@ public class MainActivity extends AppCompatActivity {
 
     //UI Elements
     private Button goButton;
-    private Button directions;
     private TextView resturantName;
     private TextView restAddress;
-    private SeekBar distanceBar;
     private TextView distanceValue;
-    private FloatingActionButton shareButton;
-    private Button websiteButton;
 
     private GetResturants downloadData;
     private List<Resturant> resturants;
     private Handler handler;
 
-    private run DOWNLOAD;
     private boolean goButtonEnabled;
     private Resturant currectResturant;
     private static final String PREFS_NAME = "MyPrefsFile";
@@ -98,6 +95,11 @@ public class MainActivity extends AppCompatActivity {
                     editor.putInt("FEEDBACK", 1);
                     editor.commit();
 
+                    //Cleanup
+                    url = null;
+                    i = null;
+
+
                     dialog.dismiss();
                 }
             });
@@ -124,12 +126,11 @@ public class MainActivity extends AppCompatActivity {
         //Assign UI elements
         goButton = (Button) findViewById(R.id.goButton);
         resturantName = (TextView) findViewById(R.id.resturantName);
-        directions = (Button) findViewById(R.id.directions);
+        Button directions = (Button) findViewById(R.id.directions);
         restAddress = (TextView) findViewById(R.id.resturantAddress);
-        distanceBar = (SeekBar) findViewById(R.id.seekBar);
+        SeekBar distanceBar = (SeekBar) findViewById(R.id.seekBar);
         distanceValue = (TextView) findViewById(R.id.distanceValue);
-        shareButton = (FloatingActionButton) findViewById(R.id.shareButton);
-        websiteButton = (Button) findViewById(R.id.buttonWebsite);
+        FloatingActionButton shareButton = (FloatingActionButton) findViewById(R.id.shareButton);
 
 
         //Setup UI
@@ -139,7 +140,6 @@ public class MainActivity extends AppCompatActivity {
         goButton.setFocusable(true);
         distanceBar.setProgress(settings.getInt("DISTANCE", 10));
         updateDistance(settings.getInt("DISTANCE", 10));
-        websiteButton.setVisibility(View.INVISIBLE);
         restAddress.setText("");
 
 
@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
 
                 //Check GPS Cord
                 if (Double.toString(longitude).equals("0.0") && Double.toString(latitude).equals("0.0")) {
-                    Toast.makeText(getApplicationContext(), "No GPS, try again.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "No location, try again.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -186,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                //Make sure a resturant is set or not empty
+                //Make sure a restaurant is set or not empty
                 if (currectResturant == null || currectResturant.getAddress().isEmpty()) {
                     Toast.makeText(getApplicationContext(), "Search for a restaurant first", Toast.LENGTH_SHORT).show();
                     return;
@@ -203,8 +203,10 @@ public class MainActivity extends AppCompatActivity {
                 // Attempt to start an activity that can handle the Intent
                 startActivity(mapIntent);
 
+
             }
         });
+
 
         distanceBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             int progressChanged = 0;
@@ -224,23 +226,15 @@ public class MainActivity extends AppCompatActivity {
             }
 
             public void onStopTrackingTouch(SeekBar seekBar) {
+
                 editor.putInt("DISTANCE", progressChanged);
                 editor.commit();
                 updateDistance(progressChanged);
             }
         });
 
-        websiteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
 
-                //Make sure the website isn't null
-                if (!(currectResturant.getWebsite() == null)) {
-                    launchWebsite();
 
-                }
-            }
-        });
 
         shareButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -252,6 +246,7 @@ public class MainActivity extends AppCompatActivity {
                     sendIntent.putExtra(Intent.EXTRA_TEXT, sendMessage);
                     sendIntent.setType("text/plain");
                     startActivity(Intent.createChooser(sendIntent, getResources().getText(R.string.app_name)));
+
                 } else {
                     Toast.makeText(getApplicationContext(), "Search for a restaurant first", Toast.LENGTH_SHORT).show();
                     return;
@@ -260,37 +255,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        //checkGPSPermission();
-        /*
-        //Setup GPS
-        if (ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{ACCESS_FINE_LOCATION},
-                    PackageManager.PERMISSION_GRANTED);
-
-            return;
-        }
-
-
-        //GPS
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationListener = new myLocationlistener();
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, locationListener);
-        */
-
     }
 
-
-
-    //Launch the website of the rest if they have one
-    private void launchWebsite() {
-        String url = currectResturant.getWebsite();
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-        browserIntent.putExtra(Browser.EXTRA_APPLICATION_ID, getPackageName());
-        startActivity(browserIntent);
-
-    }
 
     //RUn this method to update the distance value and seekbar text
     private void updateDistance(int distanceChange)
@@ -505,17 +471,6 @@ public class MainActivity extends AppCompatActivity {
                 restAddress.setText(currectResturant.getAddress());
                 goButton.animate().rotation(0).setInterpolator(new AccelerateDecelerateInterpolator());
 
-                //If they have a website then enable the website button
-                if(!(currectResturant.getWebsite() == null))
-                {
-                    websiteButton.setVisibility(View.VISIBLE);
-                    websiteButton.setEnabled(true);
-                }
-                else
-                {
-                    websiteButton.setVisibility(View.INVISIBLE);
-                    websiteButton.setEnabled(false);
-                }
 
                 goButtonEnabled = true;
 
@@ -563,8 +518,8 @@ public class MainActivity extends AppCompatActivity {
         }
         else
         {
-            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            locationListener = new myLocationlistener();
+            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            LocationListener locationListener = new myLocationlistener();
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, locationListener);
         }

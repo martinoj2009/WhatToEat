@@ -9,15 +9,13 @@ public class Resturant {
     private String address;
     private String city;
     private String postalcode;
-    private String website;
 
-    Resturant(String na, String streetAddress, String resCity, String post, String web)
+    Resturant(String na, String streetAddress, String resCity, String post)
     {
         this.name = na;
         this.address = streetAddress;
         this.city = resCity;
         this.postalcode = post;
-        this.website = web;
     }
 
 
@@ -55,9 +53,6 @@ public class Resturant {
         this.postalcode = postalcode;
     }
 
-    public String getWebsite() { return website; }
-
-    public void setWebsite(String website) { this.website = website; }
 
     public String toString()
     {
